@@ -105,6 +105,7 @@ class MNIST_t(data.Dataset):
             read_image_file(os.path.join(self.root, self.raw_folder, 't10k-images-idx3-ubyte')),
             read_label_file(os.path.join(self.root, self.raw_folder, 't10k-labels-idx1-ubyte'))
         )
+        print(training_set[0],training_set[1])
         with open(os.path.join(self.root, self.processed_folder, self.training_file), 'wb') as f:
             torch.save(training_set, f)
         with open(os.path.join(self.root, self.processed_folder, self.test_file), 'wb') as f:

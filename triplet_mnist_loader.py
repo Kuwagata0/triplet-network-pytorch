@@ -33,10 +33,11 @@ class MNIST_t(data.Dataset):
 
         if download:
             self.download()
-
+        
         if not self._check_exists():
-            raise RuntimeError('Dataset not found.' +
-                               ' You can use download=True to download it')
+            self.process()
+            # raise RuntimeError('Dataset not found.' +
+            #                    ' You can use download=True to download it')
 
         if self.train:
             self.train_data, self.train_labels = torch.load(
@@ -83,12 +84,33 @@ class MNIST_t(data.Dataset):
             return len(self.triplets_test)
 
     def _check_exists(self):
+        print(os.path.join(self.root, self.processed_folder, self.training_file))
+        print(os.path.join(self.root, self.processed_folder, self.test_file))
         return os.path.exists(os.path.join(self.root, self.processed_folder, self.training_file)) and \
             os.path.exists(os.path.join(self.root, self.processed_folder, self.test_file))
 
     def _check_triplets_exists(self):
         return os.path.exists(os.path.join(self.root, self.processed_folder, self.train_triplet_file)) and \
             os.path.exists(os.path.join(self.root, self.processed_folder, self.test_triplet_file))
+
+    def process(self):
+        # process and save as torch files
+        print('Processing...')
+
+        training_set = (
+            read_image_file(os.path.join(self.root, self.raw_folder, 'train-images-idx3-ubyte')),
+            read_label_file(os.path.join(self.root, self.raw_folder, 'train-labels-idx1-ubyte'))
+        )
+        test_set = (
+            read_image_file(os.path.join(self.root, self.raw_folder, 't10k-images-idx3-ubyte')),
+            read_label_file(os.path.join(self.root, self.raw_folder, 't10k-labels-idx1-ubyte'))
+        )
+        with open(os.path.join(self.root, self.processed_folder, self.training_file), 'wb') as f:
+            torch.save(training_set, f)
+        with open(os.path.join(self.root, self.processed_folder, self.test_file), 'wb') as f:
+            torch.save(test_set, f)
+
+        print('Done!')
 
     def download(self):
         from six.moves import urllib
@@ -159,7 +181,7 @@ class MNIST_t(data.Dataset):
             for i in range(a.shape[0]):
                 triplets.append([int(a[i]), int(c[i]), int(b[i])])           
 
-        with open(os.path.join(self.root, self.processed_folder, filename), "w") as f:
+        with open(os.path.join(self.root, self.processed_folder, filename), "w", newline='') as f:
             writer = csv.writer(f, delimiter=' ')
             writer.writerows(triplets)
         print('Done!')

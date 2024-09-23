@@ -55,14 +55,14 @@ def main():
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
     train_loader = torch.utils.data.DataLoader(
-        MNIST_t('../data', train=True, download=True,
+        MNIST_t('./MNIST_data', train=True, download=False,
                        transform=transforms.Compose([
                            transforms.ToTensor(),
                            transforms.Normalize((0.1307,), (0.3081,))
                        ])),
         batch_size=args.batch_size, shuffle=True, **kwargs)
     test_loader = torch.utils.data.DataLoader(
-        MNIST_t('../data', train=False, transform=transforms.Compose([
+        MNIST_t('./MNIST_data', train=False, transform=transforms.Compose([
                            transforms.ToTensor(),
                            transforms.Normalize((0.1307,), (0.3081,))
                        ])),
@@ -152,9 +152,9 @@ def train(train_loader, tnet, criterion, optimizer, epoch):
 
         # measure accuracy and record loss
         acc = accuracy(dista, distb)
-        losses.update(loss_triplet.data[0], data1.size(0))
+        losses.update(loss_triplet.item(), data1.size(0))
         accs.update(acc, data1.size(0))
-        emb_norms.update(loss_embedd.data[0]/3, data1.size(0))
+        emb_norms.update(loss_embedd.item()/3, data1.size(0))
 
         # compute gradient and do optimizer step
         optimizer.zero_grad()
@@ -191,7 +191,7 @@ def test(test_loader, tnet, criterion, epoch):
         if args.cuda:
             target = target.cuda()
         target = Variable(target)
-        test_loss =  criterion(dista, distb, target).data[0]
+        test_loss =  criterion(dista, distb, target).item()
 
         # measure accuracy and record loss
         acc = accuracy(dista, distb)
@@ -229,7 +229,7 @@ class VisdomLinePlotter(object):
                 ylabel=var_name
             ))
         else:
-            self.viz.updateTrace(X=np.array([x]), Y=np.array([y]), env=self.env, win=self.plots[var_name], name=split_name)
+            self.viz.line(X=np.array([x]), Y=np.array([y]), env=self.env, win=self.plots[var_name], name=split_name, update='append')
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
